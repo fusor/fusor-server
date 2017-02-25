@@ -30,6 +30,9 @@ gem 'faraday_middleware'
 gem 'scoped_search'
 gem 'will_paginate'
 
+gem 'apipie-rails'
+gem 'rest-client'
+
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug'
