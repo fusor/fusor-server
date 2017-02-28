@@ -17,6 +17,8 @@
 # require 'fusor/password_filter'
 # require 'fusor/deployment_logger'
 
+require 'open3'
+
 class Fusor::Api::V21::DeploymentsController < ApplicationController
   before_action :set_deployment, only: [:show,
                                         :update, :destroy,
@@ -132,6 +134,20 @@ class Fusor::Api::V21::DeploymentsController < ApplicationController
     return {
       :mb_available => mb_available,
       :is_empty => true #files.size == 0
+    }
+  end
+
+  def deploy
+    ansible_deploy_dir = "#{Rails.root}/tmp/ansible-ovirt/"
+    generator = FusorAnsible::AnsiblePackageGenerator.new(@deployment)
+    generator.write_package(ansible_deploy_dir)
+
+    # TODO enque Resque task and save task ID to deployment.
+    output, status_object = Open3.capture2e(generator.environment, generator.command)
+
+    render json: {
+        output: output,
+        status_object: status_object
     }
   end
 
