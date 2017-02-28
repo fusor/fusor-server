@@ -17,6 +17,8 @@
 # require 'fusor/password_filter'
 # require 'fusor/deployment_logger'
 
+require 'open3'
+
 class Fusor::Api::V21::DeploymentsController < ApplicationController
   before_action :set_deployment, only: [:show,
                                         :update, :destroy,
@@ -133,6 +135,11 @@ class Fusor::Api::V21::DeploymentsController < ApplicationController
       :mb_available => mb_available,
       :is_empty => true #files.size == 0
     }
+  end
+
+  def deploy
+    @deployment.delay.execute_ansible_run
+    render json: {}, status: 200
   end
 
   private

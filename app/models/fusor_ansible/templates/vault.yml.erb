@@ -1,0 +1,12 @@
+vault:
+  deployment:
+    rhv:
+      root_password: <%= @deployment.rhev_root_password%>
+      admin_password: <%= @deployment.rhev_engine_admin_password%>
+      engine_db_password: <%= @deployment.rhev_engine_admin_password%>
+
+  config:
+    satellite:
+      admin_user: <%= @satellite_username %>
+      admin_password: <%= @satellite_password %>
+

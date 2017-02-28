@@ -6,8 +6,8 @@ Rails.application.routes.draw do
 
         resources :deployments, only: [:index, :show, :create, :update] do
           member do
-            put :deploy
-            put :redeploy
+            post :deploy
+            post :redeploy
             get :validate
             get :validate_cdn
             get :log

@@ -1,3 +1,5 @@
+require 'open3'
+
 #
 # Copyright 2015 Red Hat, Inc.
 #
@@ -141,6 +143,14 @@ class Deployment < ActiveRecord::Base
     (ids - self.discovered_host_ids).each do |id|
       deployment_hypervisor_hosts.create(discovered_host_id: id)
     end
+  end
+
+  def execute_ansible_run
+    self.run_number = run_number + 1
+    self.save!
+    package = FusorAnsible::DeploymentAnsiblePackage.new(self)
+    package.write
+    Open3.capture2e(package.environment, package.command)
   end
 
 end
