@@ -2,7 +2,7 @@ require 'erb'
 
 
 module FusorAnsible
-  class AnsiblePackageGenerator
+  class DeploymentAnsiblePackage
     ROLES_SOURCE = '/usr/share/fusor-ansible/roles'
 
     attr_accessor :vault_password
@@ -17,27 +17,27 @@ module FusorAnsible
 
 
       @deployment = deployment
-      @ansible_package_dir = "#{Rails.root}/tmp/ansible-ovirt/#{deployment.label}"
+      @ansible_package_dir = "#{Rails.root}/tmp/ansible-ovirt/#{deployment.label}_#{deployment.id}_#{deployment.run_number}"
       @vault_password = vault_password || SecureRandom.urlsafe_base64
 
       @vars_file_info = {
-          template_path:  "#{Rails.root}/app/services/fusor_ansible/templates/vars.yml.erb",
+          template_path:  "#{Rails.root}/app/models/fusor_ansible/templates/vars.yml.erb",
           output_path: File.join(@ansible_package_dir, 'vars.yml')
       }
 
       @vault_file_info = {
-          template_path:  "#{Rails.root}/app/services/fusor_ansible/templates/vault.yml.erb",
+          template_path:  "#{Rails.root}/app/models/fusor_ansible/templates/vault.yml.erb",
           output_path: File.join(@ansible_package_dir, 'vault.yml'),
           encryption_password: @vault_password
       }
 
       @hosts_file_info = {
-          template_path:  "#{Rails.root}/app/services/fusor_ansible/templates/hosts.erb",
+          template_path:  "#{Rails.root}/app/models/fusor_ansible/templates/hosts.erb",
           output_path: File.join(@ansible_package_dir, 'hosts')
       }
 
       @playbook_file_info = {
-          template_path:  "#{Rails.root}/app/services/fusor_ansible/templates/deploy.yml.erb",
+          template_path:  "#{Rails.root}/app/models/fusor_ansible/templates/deploy.yml.erb",
           output_path: File.join(@ansible_package_dir, 'deploy.yml')
       }
 
@@ -45,8 +45,8 @@ module FusorAnsible
       @files = [@vars_file_info, @vault_file_info, @hosts_file_info, @playbook_file_info]
     end
 
-    def write_package(directory)
-      package_dir = File.join(directory, @deployment.label)
+    def write(directory = nil)
+      package_dir = directory || @ansible_package_dir
       FileUtils.rm_rf(package_dir) if Dir.exist?(package_dir)
       FileUtils.mkdir_p(package_dir)
 

@@ -43,6 +43,9 @@ gem 'rubocop', '0.33.0'
 gem 'simplecov'
 gem 'coveralls'
 
+gem 'delayed_job_active_record'
+gem 'daemons'
+
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug'
