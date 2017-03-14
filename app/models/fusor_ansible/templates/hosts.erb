@@ -1,42 +1,23 @@
 [satellite]
 <%= @satellite_fqdn %> ansible_user=vagrant ansible_ssh_pass=vagrant
 
-<% if @deployment.deploy_rhev && !@deployment.rhev_is_self_hosted%>
+<% if @deployment.deploy_rhev %>
+[rhv-hypervisor-engine]
+<%= @rhv_hypervisor_engine_host %>
+
+
 [rhv-engine]
-<%= @rhv_engine_fqdn %>
+<%= @rhv_engine_host %>
 
 
 [rhv-hypervisors]
-<% for fqdn in @rhv_hypervisor_fqdn_list %>
+<%   for fqdn in @rhv_hypervisor_host_list %>
 <%= fqdn %>
-<% end %>
+<%   end %>
 
 
 [rhv-hosts:children]
-rhv-engine
-rhv-hypervisors
-
-[rhv-hosts:vars]
-ansible_user=root
-ansible_ssh_pass=<%= @deployment.rhev_root_password%>
-
-<% end %>
-<% if @deployment.deploy_rhev && @deployment.rhev_is_self_hosted%>
-[rhv-engine-host]
-x1.example.org host_id=1 mac_address=52:11:22:33:44:41
-
-[rhv-engine]
-ovirt-engine.example.org
-
-[rhv-engine:vars]
-register_to_satellite=false
-
-[rhv-hypervisors]
-x2.example.org host_id=2 mac_address=52:11:22:33:44:42
-x3.example.org host_id=3 mac_address=52:11:22:33:44:43
-
-[rhv-hosts:children]
-rhv-engine-host
+rhv-hypervisor-engine
 rhv-engine
 rhv-hypervisors
 

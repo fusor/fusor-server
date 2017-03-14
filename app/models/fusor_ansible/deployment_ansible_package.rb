@@ -29,6 +29,7 @@ module FusorAnsible
           'ANSIBLE_HOST_KEY_CHECKING' => 'False',
           'ANSIBLE_LOG_PATH' => "#{@ansible_package_dir}/ansible.log",
           'ANSIBLE_RETRY_FILES_ENABLED' => "False",
+          'ANSIBLE_ASK_SUDO_PASS' => "False",
           'ANSIBLE_CONFIG' => @ansible_package_dir
       }
     end
@@ -48,50 +49,49 @@ module FusorAnsible
     def init_file_info(deployment)
       default_binding = ::FusorAnsible::TemplateBindings::Default.new(deployment).get_binding
 
-      @vars_file_info = get_file_info('vars.yml', ::FusorAnsible::TemplateBindings::Vars.new(deployment).get_binding)
-      @vault_file_info = get_file_info('vault.yml', default_binding, true)
-      @hosts_file_info = get_file_info('hosts', ::FusorAnsible::TemplateBindings::Hosts.new(deployment).get_binding)
-      @playbook_file_info = get_file_info('deploy.yml', default_binding)
+      @vars_file_info = get_file_info('vars.yml.erb', 'vars.yml', ::FusorAnsible::TemplateBindings::Vars.new(deployment).get_binding)
+      @vault_file_info = get_file_info('vault.yml.erb', 'vault.yml', default_binding, true)
+      @hosts_file_info = get_file_info('hosts.erb', 'hosts', ::FusorAnsible::TemplateBindings::Hosts.new(deployment).get_binding)
+      @playbook_file_info = get_file_info('deploy.yml.erb', 'deploy.yml', default_binding)
       @files = [@vars_file_info, @vault_file_info, @hosts_file_info, @playbook_file_info]
 
-      @files << get_file_info('satellite_prep.yml', default_binding)
+      @files << get_file_info('satellite_prep.yml.erb', 'satellite_prep.yml', default_binding)
 
       # if deployment.deploy_ceph
-      #   @files << get_file_info('deploy_ceph.yml', default_binding)
+      #   @files << get_file_info('deploy_ceph.yml.erb', 'deploy_ceph.yml', default_binding)
       # end
 
       if deployment.deploy_rhev
-        @files << get_file_info('rhv_pre.yml', default_binding)
+        @files << get_file_info('rhv_pre.yml.erb', 'rhv_pre.yml', default_binding)
         if deployment.rhev_is_self_hosted
-          @files << get_file_info('rhv_deploy_self_hosted.yml', default_binding)
+          @files << get_file_info('rhv_deploy_self_hosted.yml.erb', 'rhv_deploy.yml', default_binding)
         else
-          @files << get_file_info('rhv_deploy.yml', default_binding)
+          @files << get_file_info('rhv_deploy_engine_hypervisor.yml.erb', 'rhv_deploy.yml', default_binding)
         end
-        @files << get_file_info('rhv_deploy.yml', default_binding)
-        @files << get_file_info('rhv_post.yml', default_binding)
+        @files << get_file_info('rhv_post.yml.erb', 'rhv_post.yml', default_binding)
       end
 
       if deployment.deploy_openstack
-        @files << get_file_info('openstack_deploy.yml', default_binding)
+        @files << get_file_info('openstack_deploy.yml.erb', 'openstack_deploy.yml', default_binding)
       end
 
       if deployment.deploy_openshift
-        @files << get_file_info('openshift_deploy.yml', default_binding)
+        @files << get_file_info('openshift_deploy.yml.erb', 'openshift_deploy.yml', default_binding)
       end
 
       if deployment.deploy_rhev && deployment.deploy_cfme
-        @files << get_file_info('cfme_rhv_deploy.yml', default_binding)
+        @files << get_file_info('cfme_rhv_deploy.yml.erb', 'cfme_rhv_deploy.yml', default_binding)
       end
 
       if deployment.deploy_openstack && deployment.deploy_cfme
-        @files << get_file_info('cfme_openstack_deploy.yml', default_binding)
+        @files << get_file_info('cfme_openstack_deploy.yml.erb', 'cfme_openstack_deploy.yml', default_binding)
       end
     end
     
-    def get_file_info(filename, binding, encrypted = false)
+    def get_file_info(input_filename, output_filename, binding, encrypted = false)
       file_info = {
-          template_path: "#{Rails.root}/app/models/fusor_ansible/templates/#{filename}.erb",
-          output_path: File.join(@ansible_package_dir, "#{filename}"),
+          template_path: "#{Rails.root}/app/models/fusor_ansible/templates/#{input_filename}",
+          output_path: File.join(@ansible_package_dir, "#{output_filename}"),
           binding: binding
       }
       file_info[:encryption_password] = @vault_password if encrypted
