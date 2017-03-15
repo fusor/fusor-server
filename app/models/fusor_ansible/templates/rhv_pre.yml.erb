@@ -75,5 +75,23 @@
     - role: satellite_discovery_provision_list
       username: "{{ config.satellite.admin_user }}"
       password: "{{ config.satellite.admin_password }}"
-      discovered_hosts: "{{ deployment.rhv.engines + deployment.rhv.hypervisors }}"
+      discovered_hosts: "{{ (deployment.rhv.engines or []) + (deployment.rhv.hypervisors or []) }}"
 
+<% if @deployment.rhev_is_self_hosted %>
+    - role: satellite_host_create
+      username: "{{ config.satellite.admin_user }}"
+      password: "{{ config.satellite.admin_password }}"
+      organization: "{{ config.satellite.default_org_name }}"
+      location: "{{ config.satellite.default_location_name }}"
+      name: "{{ deployment.rhv.self_hosted_engine_hostname }}"
+      environment_name: production
+      hostgroup: "{{ deployment.label }}"
+      domain: "{{config.satellite.domain_name}}"
+      subnet: "{{config.satellite.subnet_name}}"
+      architecture: "{{ config.rhv.arch_name }}"
+      operating_system: "{{ config.rhv.os_title }}"
+      partition_table: "{{ config.rhv.partition_table_name }}"
+      root_pass: "{{ deployment.rhv.root_password }}"
+      mac: "{{ deployment.rhv.self_hosted_engine_mac_address }}"
+
+<% end %>

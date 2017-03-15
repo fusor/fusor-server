@@ -310,17 +310,20 @@ class Fusor::Api::V21::DeploymentsController < ApplicationController
   param :type, String, required: true, desc: 'Type of file share (NFS/glusterfs)'
   param :unique_suffix, String, required: true, desc: 'Unique suffix allowing async mount validation'
   def check_mount_point
-    mount_address = params['address']
-    mount_path = params['path']
-    mount_type = params['type']
-    mount_unique_suffix = params['unique_suffix']
+    #TODO Skipping for now, will re-implement later.
+    render json: { :mounted => true, :is_empty => true }, status: 200
 
-    begin
-      mount_result = mount_storage(mount_address, mount_path, mount_type, mount_unique_suffix)
-      render json: { :mounted => true, :is_empty => mount_result[:is_empty] }, status: 200
-    rescue
-      render json: { :mounted => false, :is_empty => false }, status: 200
-    end
+    # mount_address = params['address']
+    # mount_path = params['path']
+    # mount_type = params['type']
+    # mount_unique_suffix = params['unique_suffix']
+    #
+    # begin
+    #   mount_result = mount_storage(mount_address, mount_path, mount_type, mount_unique_suffix)
+    #   render json: { :mounted => true, :is_empty => mount_result[:is_empty] }, status: 200
+    # rescue
+    #   render json: { :mounted => false, :is_empty => false }, status: 200
+    # end
   end
 
   # mount_storage will return in megabytes the amount of free space left on the storage mount
@@ -332,7 +335,7 @@ class Fusor::Api::V21::DeploymentsController < ApplicationController
       type = "nfs"
     end
 
-    cmd = "sudo safe-mount.sh '#{deployment_id}' '#{unique_suffix}' '#{address}' '#{path}' '#{type}'"
+    cmd = "sudo #{Rails.root}/bin/safe-mount.sh '#{deployment_id}' '#{unique_suffix}' '#{address}' '#{path}' '#{type}'"
     status, _output = Utils::Fusor::CommandUtils.run_command(cmd)
 
     raise 'Unable to mount NFS share at specified mount point' unless status == 0
@@ -388,19 +391,26 @@ class Fusor::Api::V21::DeploymentsController < ApplicationController
   def add_rhv_engine
     engine_id = params['engine_id']
     engine_name = params['engine_name']
+    engine_mac_address = params['engine_mac_address']
 
     # don't delete/add rows if nothing changed
     if (@deployment.rhev_engine_host_id != engine_id) ||
        (@deployment.rhev_self_hosted_engine_hostname != engine_name)
 
       rhv_engine = DeploymentHost.where(deployment_id: @deployment.id,
-                           discovered_host_id: @deployment.rhev_engine_host_id,
-                           deployment_host_type: 'rhv_engine').first
+                                        deployment_host_type: 'rhv_engine').first
+
+      #TODO: remove rhev_engine_host_id update
+      # ugly hack for compatibility with messed up ember models for now since
+      # the front end still expects rhev_engine_host_id to be a discovered_host_id
+      @deployment.rhev_engine_host_id = engine_id
+      @deployment.save
 
       if rhv_engine.present?
         # update row if it exists
         rhv_engine.discovered_host_id = engine_id
         rhv_engine.host_name = engine_name
+        rhv_engine.mac_address = engine_mac_address
         if rhv_engine.save
           render json: {}, status: 200
         else
@@ -464,10 +474,10 @@ class Fusor::Api::V21::DeploymentsController < ApplicationController
     # strong params will filter the value so it does not impact an update.
     # See discussion: https://github.com/rails/rails/issues/13766
     #############################################################
-    if params[:deployment][:discovered_host_ids_names].nil?
-      allowed << :discovered_host_ids_names
+    if params[:deployment][:discovered_host_ids_names_macs].nil?
+      allowed << :discovered_host_ids_names_macs
     else
-      allowed << { :discovered_host_ids_names => [] }
+      allowed << { :discovered_host_ids_names_macs => [] }
     end
     #############################################################
 

@@ -1,0 +1,80 @@
+---
+- hosts: rhv-hypervisor-engine
+  remote_user: root
+  roles:
+    - override_tty
+    - role: subscription_enable_repos
+      repositories: "{{ config.rhv.hypervisor_repositories }}"
+    - wait_for_yum_lock
+    - role: rhv_hypervisor_engine_host
+      mac_address: "{{ deployment.rhv.hypervisors[0].mac_address }}"
+      engine_fqdn: "{{ deployment.rhv.self_hosted_engine_fqdn }}"
+      engine_mac_address: "{{ deployment.rhv.self_hosted_engine_mac_address }}"
+      gateway: "{{ deployment.rhv.gateway }}"
+      data_center_name: "{{ deployment.rhv.data_center_name }}"
+      cluster_name: "{{ deployment.rhv.cluster_name }}"
+      storage_datacenter_name: "{{ deployment.rhv.self_hosted_storage_datacenter_name }}"
+      storage_type: "{{ deployment.rhv.storage_type }}"
+      hosted_storage_name: "{{ deployment.rhv.self_hosted_storage_name }}"
+      hosted_storage_address: "{{ deployment.rhv.self_hosted_storage_address }}"
+      hosted_storage_path: "{{ deployment.rhv.self_hosted_storage_path }}"
+      cpu_model: "{{ deployment.rhv.cpu_model }}"
+      root_password: "{{ deployment.rhv.root_password }}"
+      admin_password: "{{ deployment.rhv.admin_password }}"
+      engine_db_password: "{{ deployment.rhv.engine_db_password }}"
+      config_dir: "{{ deployment.rhv.config_dir }}"
+
+- hosts: rhv-engine
+  remote_user: root
+  roles:
+    - role: satellite_host_registration
+      satellite_fqdn: "{{ config.satellite.fqdn}}"
+      activation_key: "{{ deployment.rhv.engine_activation_key }}"
+      organization: "{{ deployment.org_name }}"
+    - role: subscription_enable_repos
+      repositories: "{{ config.rhv.engine_repositories }}"
+    - role: rhv_engine_wait
+      engine_fqdn: "{{ deployment.rhv.engines[0].fqdn }}"
+    - role: rhv_datacenter
+      config_dir: "{{ deployment.rhv.config_dir }}"
+      engine_fqdn: "{{ deployment.rhv.engines[0].fqdn }}"
+      admin_password: "{{ deployment.rhv.admin_password }}"
+      data_center_name: "{{ deployment.rhv.data_center_name }}"
+      cluster_name: "{{ deployment.rhv.cluster_name }}"
+      cpu_type: "{{ deployment.rhv.cpu_type }}"
+      mac_address_range: "{{ deployment.rhv.mac_address_range }}"
+      mac_pool_name: "{{ deployment.rhv.mac_pool_name }}"
+    - role: rhv_storage
+      config_dir: "{{ deployment.rhv.config_dir }}"
+      engine_fqdn: "{{ deployment.rhv.engines[0].fqdn }}"
+      data_center_name: "{{ deployment.rhv.data_center_name }}"
+      storage_type: "{{ deployment.rhv.storage_type }}"
+      admin_password: "{{ deployment.rhv.admin_password }}"
+      data_storage_name: "{{ deployment.rhv.data_storage_name }}"
+      data_storage_address: "{{ deployment.rhv.data_storage_address }}"
+      data_storage_path: "{{ deployment.rhv.data_storage_path }}"
+      create_export_domain: "{{ deployment.rhv.create_export_domain }}"
+      export_storage_name: "{{ deployment.rhv.export_storage_name }}"
+      export_storage_address: "{{ deployment.rhv.export_storage_address }}"
+      export_storage_path: "{{ deployment.rhv.export_storage_path }}"
+    - rhv_engine_install_self_hosted
+
+- hosts: rhv-hypervisors
+  remote_user: root
+  roles:
+    - override_tty
+    - role: subscription_enable_repos
+      repositories: "{{ config.rhv.hypervisor_repositories }}"
+    - wait_for_yum_lock
+    - role: rhv_hypervisor_additional_host
+      storage_type: "{{ deployment.rhv.storage_type }}"
+      cpu_model: "{{ deployment.rhv.cpu_model }}"
+      gateway: "{{ deployment.rhv.gateway }}"
+      hosted_storage_name: "{{ deployment.rhv.self_hosted_storage_name }}"
+      hosted_storage_addrees: "{{ deployment.rhv.self_hosted_storage_address }}"
+      hosted_storage_path: "{{ deployment.rhv.self_hosted_storage_path }}"
+      config_dir: "{{ deployment.rhv.config_dir }}"
+      admin_password: "{{ deployment.rhv.rhev_engine_admin_password }}"
+
+
+

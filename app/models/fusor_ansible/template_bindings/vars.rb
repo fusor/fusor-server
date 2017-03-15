@@ -3,8 +3,14 @@ module FusorAnsible
     class Vars < Default
       def initialize(deployment)
         super(deployment)
+        @rhv_engine_hostgroup_title =  "Fusor Base/#{@deployment.label}/RHV-Engine"
+        @rhv_hypervisor_hostgroup_title =  "Fusor Base/#{@deployment.label}/RHV-Hypervisor"
         @rhv_cpu_model = get_cpu_model(deployment.rhev_cpu_type)
         @rhv_mac_address_range = get_mac_address_range(deployment.id)
+        @rhv_self_hosted_engine_fqdn = ''
+        if @deployment.deploy_rhev && @deployment.rhev_is_self_hosted
+          @rhv_self_hosted_engine_fqdn = "#{@deployment.rhev_self_hosted_engine_hostname}.#{@satellite_domain}"
+        end
       end
 
       private

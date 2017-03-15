@@ -122,7 +122,11 @@ class Deployment < ActiveRecord::Base
 
   has_many :deployment_hosts
 
+  has_many :rhv_engine_hosts, -> { where(:deployment_host_type => 'rhv_engine') }, :class_name => "DeploymentHost"
+  #TODO remove deployment_hypervisor_hosts
   has_many :deployment_hypervisor_hosts, -> { where(:deployment_host_type => 'rhev_hypervisor') }, :class_name => "DeploymentHost"
+  alias_attribute :rhv_hypervisor_hosts, :deployment_hypervisor_hosts
+
   has_many :ose_deployment_master_hosts, -> { where(:deployment_host_type => 'ose_master') },      :class_name => "DeploymentHost"
   has_many :ose_deployment_worker_hosts, -> { where(:deployment_host_type => 'ose_worker') },      :class_name => "DeploymentHost"
   has_many :ose_deployment_ha_hosts,     -> { where(:deployment_host_type => 'ose_ha') },          :class_name => "DeploymentHost"
@@ -130,8 +134,10 @@ class Deployment < ActiveRecord::Base
   has_many :deployment_delayed_jobs
   has_many :delayed_jobs, through: :deployment_delayed_jobs
 
-  before_validation :update_label, on: :create  # we validate on create, so we need to do it before those validations
-  before_save :update_label, on: :update        # but we don't validate on update, so we need to call before_save
+  before_validation :update_label, :update_rhev_self_hosted_engine_mac_address,
+                    on: :create # we validate on create, so we need to do it before those validations
+  before_save :update_label, :update_rhev_self_hosted_engine_mac_address,
+              on: :update # but we don't validate on update, so we need to call before_save
 
   # since can't have has_many :discovered_host, so no model discoverd_hosts,
   # need to create collection_ids= methods manually
@@ -139,40 +145,29 @@ class Deployment < ActiveRecord::Base
     @discovered_host_ids ||= self.deployment_hypervisor_hosts.pluck(:discovered_host_id)
   end
 
-  def discovered_host_names
-    @discovered_host_names ||= self.deployment_hypervisor_hosts.pluck(:host_name)
-  end
-
-  def discovered_host_ids_names=(ids_names = [])
-    num_hosts = ids_names.count / 2
-    array_ids  = Array.new
-    array_names = Array.new
-    hash_hosts = Hash.new
+  def discovered_host_ids_names_macs=(ids_names_macs = [])
+    num_hosts = ids_names_macs.count / 3
+    new_hosts = []
     num_hosts.times do |i|
-      array_ids << ids_names[i]
-      array_names << ids_names[num_hosts + i]
-      hash_hosts.merge!(Hash[ids_names[i] => ids_names[num_hosts + i]])
+      new_hosts << {
+          discovered_host_id: ids_names_macs[i],
+          host_name: ids_names_macs[num_hosts + i],
+          mac_address: ids_names_macs[num_hosts * 2 + i]
+      }
     end
 
-    # don't delete/add rows if nothing changed
-    if (self.discovered_host_ids.sort != array_ids.map(&:to_i).sort) ||
-       (self.discovered_host_names.sort != array_names.sort)
-
-      # delete rows if array is not empty
-      self.deployment_hypervisor_hosts
-          .where(discovered_host_id: self.discovered_host_ids - array_ids)
-          .destroy_all
-
-      # add rows if array is not empty
-      (array_ids - self.discovered_host_ids).each do |id|
-        deployment_hypervisor_hosts.create(discovered_host_id: id,
-                                           host_name: hash_hosts[id])
-      end
-    end
+    self.deployment_hypervisor_hosts.destroy_all
+    new_hosts.each{|h| deployment_hypervisor_hosts.create h}
   end
 
   def update_label
     self.label = name ? name.downcase.gsub(/[^a-z0-9_]/i, "_") : nil
+  end
+
+  def update_rhev_self_hosted_engine_mac_address
+    if rhev_is_self_hosted && (rhev_self_hosted_engine_mac_address.nil? || rhev_self_hosted_engine_mac_address.empty?)
+      self.rhev_self_hosted_engine_mac_address = ::Utils::Fusor::MacAddresses.generate_mac_address
+    end
   end
 
   def execute_ansible_run

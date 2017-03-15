@@ -3,7 +3,7 @@ module Utils
     class MacAddresses
 
       def self.generate_mac_address
-        options = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F']
+        options = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f']
         l = [[options.sample, '2'].join('')]
         5.times do
           l << (options.sample 2).join('')

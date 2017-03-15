@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170308152121) do
+ActiveRecord::Schema.define(version: 20170314221910) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -50,15 +50,16 @@ ActiveRecord::Schema.define(version: 20170308152121) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "host_name"
+    t.string   "mac_address"
   end
 
   create_table "deployments", force: :cascade do |t|
     t.string   "name"
     t.integer  "lifecycle_environment_id"
     t.integer  "organization_id"
-    t.boolean  "deploy_rhev",                      default: false
-    t.boolean  "deploy_cfme",                      default: false
-    t.boolean  "deploy_openstack",                 default: false
+    t.boolean  "deploy_rhev",                         default: false
+    t.boolean  "deploy_cfme",                         default: false
+    t.boolean  "deploy_openstack",                    default: false
     t.integer  "rhev_engine_host_id"
     t.string   "rhev_data_center_name"
     t.string   "rhev_cluster_name"
@@ -69,7 +70,7 @@ ActiveRecord::Schema.define(version: 20170308152121) do
     t.string   "rhev_share_path"
     t.string   "cfme_install_loc"
     t.text     "description"
-    t.boolean  "rhev_is_self_hosted",              default: false
+    t.boolean  "rhev_is_self_hosted",                 default: false
     t.string   "rhev_engine_admin_password"
     t.string   "foreman_task_uuid"
     t.string   "upstream_consumer_uuid"
@@ -82,33 +83,33 @@ ActiveRecord::Schema.define(version: 20170308152121) do
     t.string   "rhev_local_storage_path"
     t.string   "host_naming_scheme"
     t.string   "custom_preprend_name"
-    t.boolean  "enable_access_insights",           default: false
+    t.boolean  "enable_access_insights",              default: false
     t.string   "cfme_admin_password"
     t.string   "cdn_url"
     t.string   "manifest_file"
     t.boolean  "is_disconnected"
     t.string   "label"
-    t.boolean  "deploy_openshift",                 default: false
+    t.boolean  "deploy_openshift",                    default: false
     t.string   "openshift_install_loc"
-    t.integer  "openshift_storage_size",           default: 0
+    t.integer  "openshift_storage_size",              default: 0
     t.string   "openshift_username"
-    t.integer  "openshift_master_vcpu",            default: 0
-    t.integer  "openshift_master_ram",             default: 0
-    t.integer  "openshift_master_disk",            default: 0
-    t.integer  "openshift_node_vcpu",              default: 0
-    t.integer  "openshift_node_ram",               default: 0
-    t.integer  "openshift_node_disk",              default: 0
-    t.integer  "openshift_available_vcpu",         default: 0
-    t.integer  "openshift_available_ram",          default: 0
-    t.integer  "openshift_available_disk",         default: 0
-    t.integer  "openshift_number_master_nodes",    default: 0
-    t.integer  "openshift_number_worker_nodes",    default: 0
+    t.integer  "openshift_master_vcpu",               default: 0
+    t.integer  "openshift_master_ram",                default: 0
+    t.integer  "openshift_master_disk",               default: 0
+    t.integer  "openshift_node_vcpu",                 default: 0
+    t.integer  "openshift_node_ram",                  default: 0
+    t.integer  "openshift_node_disk",                 default: 0
+    t.integer  "openshift_available_vcpu",            default: 0
+    t.integer  "openshift_available_ram",             default: 0
+    t.integer  "openshift_available_disk",            default: 0
+    t.integer  "openshift_number_master_nodes",       default: 0
+    t.integer  "openshift_number_worker_nodes",       default: 0
     t.string   "openshift_storage_type"
     t.string   "openshift_export_path"
-    t.integer  "cloudforms_vcpu",                  default: 0
-    t.integer  "cloudforms_ram",                   default: 0
-    t.integer  "cloudforms_vm_disk_size",          default: 0
-    t.integer  "cloudforms_db_disk_size",          default: 0
+    t.integer  "cloudforms_vcpu",                     default: 0
+    t.integer  "cloudforms_ram",                      default: 0
+    t.integer  "cloudforms_vm_disk_size",             default: 0
+    t.integer  "cloudforms_db_disk_size",             default: 0
     t.boolean  "has_content_error"
     t.string   "openshift_subdomain_name"
     t.string   "ose_public_key_path"
@@ -122,7 +123,7 @@ ActiveRecord::Schema.define(version: 20170308152121) do
     t.string   "hosted_storage_path"
     t.integer  "openstack_deployment_id"
     t.string   "cfme_db_password"
-    t.boolean  "openshift_sample_helloworld",      default: false
+    t.boolean  "openshift_sample_helloworld",         default: false
     t.string   "rhev_self_hosted_engine_hostname"
     t.string   "cfme_rhv_address"
     t.string   "cfme_rhv_hostname"
@@ -130,20 +131,11 @@ ActiveRecord::Schema.define(version: 20170308152121) do
     t.string   "cfme_osp_hostname"
     t.text     "ssh_public_key"
     t.text     "ssh_private_key"
-    t.datetime "created_at",                                       null: false
-    t.datetime "updated_at",                                       null: false
-    t.integer  "run_number",                       default: 0,     null: false
+    t.datetime "created_at",                                          null: false
+    t.datetime "updated_at",                                          null: false
+    t.integer  "run_number",                          default: 0,     null: false
+    t.string   "rhev_self_hosted_engine_mac_address"
   end
-
-  create_table "sessions", force: :cascade do |t|
-    t.string   "session_id", null: false
-    t.text     "data"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
-
-  add_index "sessions", ["session_id"], name: "index_sessions_on_session_id", unique: true, using: :btree
-  add_index "sessions", ["updated_at"], name: "index_sessions_on_updated_at", using: :btree
 
   create_table "subscriptions", force: :cascade do |t|
     t.integer  "deployment_id"
