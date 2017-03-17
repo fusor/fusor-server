@@ -17,7 +17,10 @@ module Fusor::Api::V21
          label: hash['label'],
          description: hash['description'],
          library: hash['library'],
-         prior_id: hash['prior_id']
+         prior: (hash['prior']['id'] if hash['prior']),
+         prior_id: (hash['prior']['id'] if hash['prior']),
+         created_at: hash['created_at'],
+         updated_at: hash['updated_at']
          }
       end
     end
@@ -33,7 +36,10 @@ module Fusor::Api::V21
        label: hash['label'],
        description: hash['description'],
        library: hash['library'],
-       prior_id: hash['prior_id']
+       prior: (hash['prior']['id'] if hash['prior']),
+       prior_id: (hash['prior']['id'] if hash['prior']),
+       created_at: hash['created_at'],
+       updated_at: hash['updated_at']
       }
     end
 
